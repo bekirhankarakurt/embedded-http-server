@@ -1,0 +1,85 @@
+:root {
+  --bg: #0f1418;
+  --card: #182129;
+  --text: #e4e9ee;
+  --muted: #8d9aa6;
+  --accent: #3fa9f5;
+  --ok: #3ccf8e;
+  --bad: #f05d5e;
+  --border: #26323d;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+h1 { font-size: 20px; margin: 0 auto 0 0; }
+h2 { font-size: 16px; margin: 0 0 12px; color: var(--accent); }
+main {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+.badge {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.badge.ok { color: var(--ok); border-color: var(--ok); }
+.badge.bad { color: var(--bad); border-color: var(--bad); }
+.grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; font-variant-numeric: tabular-nums; }
+form { display: grid; gap: 10px; }
+label { display: grid; gap: 4px; color: var(--muted); font-size: 13px; }
+input, select {
+  font: inherit;
+  padding: 7px 9px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+button {
+  font: inherit;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #06121b;
+  cursor: pointer;
+}
+button[type="button"] { background: var(--border); color: var(--text); }
+button.danger { background: var(--bad); color: #fff; }
+#form-msg.ok { color: var(--ok); }
+#form-msg.bad { color: var(--bad); }
+pre {
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
