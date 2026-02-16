@@ -15,8 +15,7 @@ namespace {
 
 struct TempTree {
     fs::path root;
-    TempTree() {
-        root = fs::temp_directory_path() / ("ehs-static-" + std::to_string(::getpid()));
+    TempTree() : root(fs::temp_directory_path() / ("ehs-static-" + std::to_string(::getpid()))) {
         fs::remove_all(root);
         fs::create_directories(root / "www" / "sub");
         std::ofstream(root / "www" / "index.html") << "<h1>home</h1>";

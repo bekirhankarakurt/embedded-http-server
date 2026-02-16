@@ -76,6 +76,15 @@ constexpr std::array<MimeEntry, 18> kMimeTypes{{
     return std::string(buf.data(), static_cast<std::size_t>(ptr - buf.data()));
 }
 
+[[nodiscard]] std::filesystem::path canonical_directory(const std::filesystem::path& root) {
+    std::error_code ec;
+    auto resolved = std::filesystem::canonical(root, ec);
+    if (ec || !std::filesystem::is_directory(resolved, ec)) {
+        throw std::invalid_argument("static root is not a directory: " + root.string());
+    }
+    return resolved;
+}
+
 }  // namespace
 
 std::string_view mime_type(std::string_view extension) noexcept {
@@ -88,13 +97,7 @@ std::string_view mime_type(std::string_view extension) noexcept {
 }
 
 StaticFiles::StaticFiles(const std::filesystem::path& root, std::string index_file)
-    : index_file_(std::move(index_file)) {
-    std::error_code ec;
-    root_ = std::filesystem::canonical(root, ec);
-    if (ec || !std::filesystem::is_directory(root_, ec)) {
-        throw std::invalid_argument("static root is not a directory: " + root.string());
-    }
-}
+    : root_(canonical_directory(root)), index_file_(std::move(index_file)) {}
 
 Response StaticFiles::serve(const Request& request, std::string_view relative_path) const {
     if (request.method != Method::Get && request.method != Method::Head) {

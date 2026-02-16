@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         const std::string_view arg(argv[1]);
         const auto [ptr, ec] = std::from_chars(arg.data(), arg.data() + arg.size(), port);
         if (ec != std::errc{} || ptr != arg.data() + arg.size()) {
-            std::fprintf(stderr, "usage: ehs-hello [PORT]\n");
+            static_cast<void>(std::fprintf(stderr, "usage: ehs-hello [PORT]\n"));
             return 2;
         }
     }
@@ -55,14 +55,14 @@ int main(int argc, char** argv) {
         ehs::Server server([&router](ehs::Request& request) { return router.handle(request); }, options);
         server.listen();
         g_server.store(&server);
-        std::signal(SIGINT, on_signal);
-        std::signal(SIGTERM, on_signal);
-        std::signal(SIGPIPE, SIG_IGN);
-        std::fprintf(stderr, "ehs-hello listening on http://0.0.0.0:%u\n", static_cast<unsigned>(server.port()));
+        static_cast<void>(std::signal(SIGINT, on_signal));
+        static_cast<void>(std::signal(SIGTERM, on_signal));
+        static_cast<void>(std::signal(SIGPIPE, SIG_IGN));
+        static_cast<void>(std::fprintf(stderr, "ehs-hello listening on http://0.0.0.0:%u\n", static_cast<unsigned>(server.port())));
         server.run();
         g_server.store(nullptr);
     } catch (const std::exception& e) {
-        std::fprintf(stderr, "ehs-hello: %s\n", e.what());
+        static_cast<void>(std::fprintf(stderr, "ehs-hello: %s\n", e.what()));
         return 1;
     }
     return 0;

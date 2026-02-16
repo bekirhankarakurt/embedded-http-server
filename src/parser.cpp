@@ -61,9 +61,9 @@ constexpr std::size_t kMaxChunkDataEndLine = 2;
         if (c >= '0' && c <= '9') {
             digit = static_cast<std::uint64_t>(c - '0');
         } else if (c >= 'a' && c <= 'f') {
-            digit = static_cast<std::uint64_t>(c - 'a' + 10);
+            digit = static_cast<std::uint64_t>(c - 'a') + 10U;
         } else if (c >= 'A' && c <= 'F') {
-            digit = static_cast<std::uint64_t>(c - 'A' + 10);
+            digit = static_cast<std::uint64_t>(c - 'A') + 10U;
         } else {
             return std::nullopt;
         }
@@ -119,11 +119,11 @@ std::size_t RequestParser::feed(std::string_view data) {
     while (used < data.size() && state_ != State::Complete && state_ != State::Error) {
         const auto rest = data.substr(used);
         if (state_ == State::Body || state_ == State::ChunkData) {
-            const auto take = static_cast<std::size_t>(
+            const auto count = static_cast<std::size_t>(
                 std::min<std::uint64_t>(remaining_, static_cast<std::uint64_t>(rest.size())));
-            request_.body.append(rest.substr(0, take));
-            remaining_ -= take;
-            used += take;
+            request_.body.append(rest.substr(0, count));
+            remaining_ -= count;
+            used += count;
             if (remaining_ == 0) {
                 state_ = state_ == State::Body ? State::Complete : State::ChunkDataEnd;
             }
@@ -131,8 +131,8 @@ std::size_t RequestParser::feed(std::string_view data) {
         }
 
         const auto newline = rest.find('\n');
-        const std::size_t take = newline == std::string_view::npos ? rest.size() : newline + 1;
-        const std::size_t content = newline == std::string_view::npos ? take : newline;
+        const std::size_t span = newline == std::string_view::npos ? rest.size() : newline + 1;
+        const std::size_t content = newline == std::string_view::npos ? span : newline;
         if (line_.size() + content > line_limit() + 1) {
             if (state_ == State::RequestLine) {
                 fail(Status::UriTooLong, "request line too long");
@@ -144,14 +144,14 @@ std::size_t RequestParser::feed(std::string_view data) {
             return used;
         }
         if (state_ == State::Headers || state_ == State::Trailers) {
-            header_bytes_ += take;
+            header_bytes_ += span;
             if (header_bytes_ > limits_.max_header_bytes) {
                 fail(Status::RequestHeaderFieldsTooLarge, "header section too large");
                 return used;
             }
         }
-        line_.append(rest.substr(0, take));
-        used += take;
+        line_.append(rest.substr(0, span));
+        used += span;
         if (newline == std::string_view::npos) {
             if (!line_.empty() && line_ != "\r") {
                 started_ = true;
@@ -252,7 +252,7 @@ void RequestParser::parse_request_line(std::string_view line) {
             const auto u = static_cast<unsigned char>(c);
             return u > 0x20U && u != 0x7FU;
         });
-    if (!target_ok || (target.front() != '/' && !(target == "*" && *method == Method::Options))) {
+    if (!target_ok || (target.front() != '/' && (target != "*" || *method != Method::Options))) {
         fail(Status::BadRequest, "invalid request target");
         return;
     }
