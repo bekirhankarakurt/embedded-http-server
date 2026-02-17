@@ -69,3 +69,47 @@ jobs:
           ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
         run: ctest --test-dir build --output-on-failure
+
+  static-analysis:
+    name: clang-tidy + cppcheck
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y cppcheck clang-tidy
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Generate headers
+        run: cmake --build build --target ehs -j
+      - name: clang-tidy
+        run: clang-tidy -p build --quiet src/*.cpp examples/device_panel/*.cpp examples/hello/*.cpp
+      - name: cppcheck
+        run: >
+          cppcheck --enable=warning,style,performance,portability
+          --std=c++17 --language=c++ --inline-suppr --error-exitcode=1 -q
+          --suppress=missingIncludeSystem
+          --suppress=unusedStructMember
+          --suppress=useStlAlgorithm
+          --suppress=constParameterReference
+          --suppress=knownConditionTrueFalse:tests/test_main.cpp
+          -I include -I build/generated
+          src examples tests
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gcovr
+        run: pipx install gcovr
+      - name: Build and test with coverage
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DEHS_COVERAGE=ON
+          cmake --build build -j
+          ctest --test-dir build --output-on-failure
+      - name: Report
+        run: >
+          gcovr -r . build
+          --filter src/ --filter include/ --filter examples/device_panel/
+          --exclude examples/device_panel/main.cpp
+          --print-summary --fail-under-line 80
