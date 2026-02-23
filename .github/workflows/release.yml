@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            cmake_args: ""
+            packages: ""
+            run_tests: true
+          - arch: aarch64
+            cmake_args: -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-linux-gnu.cmake -DEHS_BUILD_TESTS=OFF
+            packages: g++-aarch64-linux-gnu
+            run_tests: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cross compiler
+        if: matrix.packages != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.packages }}
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DEHS_WARNINGS_AS_ERRORS=ON ${{ matrix.cmake_args }}
+          cmake --build build -j
+      - name: Test
+        if: matrix.run_tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          name="embedded-http-server-${version}-linux-${{ matrix.arch }}"
+          cmake --install build --prefix "dist/${name}" --strip
+          cp README.md LICENSE CHANGELOG.md "dist/${name}/"
+          tar -C dist -czf "${name}.tar.gz" "${name}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.arch }}
+          path: "*.tar.gz"
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+      - name: Checksums
+        run: sha256sum *.tar.gz | tee SHA256SUMS
+      - name: Release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found && /^\[.*\]: / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          test -s notes.md
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME"
+          --title "embedded-http-server $GITHUB_REF_NAME"
+          --notes-file notes.md
+          *.tar.gz SHA256SUMS
