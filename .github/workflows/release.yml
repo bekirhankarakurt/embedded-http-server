@@ -3,6 +3,14 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to create and release from the selected commit (e.g. v1.0.0)"
+        required: true
+
+env:
+  TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
 permissions:
   contents: read
@@ -36,7 +44,7 @@ jobs:
         run: ctest --test-dir build --output-on-failure
       - name: Package
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           name="embedded-http-server-${version}-linux-${{ matrix.arch }}"
           cmake --install build --prefix "dist/${name}" --strip
           cp README.md LICENSE CHANGELOG.md "dist/${name}/"
@@ -62,7 +70,7 @@ jobs:
         run: sha256sum *.tar.gz | tee SHA256SUMS
       - name: Release notes from CHANGELOG
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version="${TAG#v}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
@@ -74,7 +82,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$GITHUB_REF_NAME"
-          --title "embedded-http-server $GITHUB_REF_NAME"
+          gh release create "$TAG"
+          --target "$GITHUB_SHA"
+          --title "embedded-http-server $TAG"
           --notes-file notes.md
           *.tar.gz SHA256SUMS
