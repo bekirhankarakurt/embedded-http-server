@@ -1,0 +1,20 @@
+GET /api/health HTTP/1.1
+Host: device.local
+
+POST /api/reboot HTTP/1.1
+Host: device.local
+Content-Length: 0
+
+PUT /api/config HTTP/1.1
+Host: device.local
+Content-Type: application/json
+Content-Length: 28
+
+{"hostname":"replayed-node"}
+GET /api/logs?limit=5 HTTP/1.1
+Host: device.local
+
+GET /api/config/hostname HTTP/1.1
+Host: device.local
+Connection: close
+

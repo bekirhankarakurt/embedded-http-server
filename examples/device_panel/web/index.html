@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Device Panel</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Device Panel</h1>
+    <span id="device-kind" class="badge">-</span>
+    <span id="conn" class="badge">connecting...</span>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Status</h2>
+      <dl class="grid">
+        <dt>Hostname</dt><dd id="s-hostname">-</dd>
+        <dt>Uptime</dt><dd id="s-uptime">-</dd>
+        <dt>CPU temperature</dt><dd id="s-temp">-</dd>
+        <dt>Load (1 min)</dt><dd id="s-load">-</dd>
+        <dt>Memory available</dt><dd id="s-mem">-</dd>
+        <dt>HTTP requests</dt><dd id="s-req">-</dd>
+        <dt>Open connections</dt><dd id="s-conns">-</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Configuration</h2>
+      <form id="config-form" autocomplete="off">
+        <label>Hostname <input name="hostname" required maxlength="63"></label>
+        <label>IP mode
+          <select name="ip_mode"><option value="dhcp">DHCP</option><option value="static">Static</option></select>
+        </label>
+        <label>IP address <input name="ip_address" required></label>
+        <label>Netmask <input name="netmask" required></label>
+        <label>Gateway <input name="gateway" required></label>
+        <label>NTP server <input name="ntp_server" required></label>
+        <label>Telemetry interval (ms) <input name="telemetry_interval_ms" type="number" min="100" max="60000" required></label>
+        <label>Log level
+          <select name="log_level">
+            <option>debug</option><option>info</option><option>warn</option><option>error</option>
+          </select>
+        </label>
+        <div class="actions">
+          <button type="submit">Save</button>
+          <button type="button" id="reload">Reload</button>
+          <span id="form-msg" role="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Event log</h2>
+      <pre id="log"></pre>
+      <div class="actions">
+        <button type="button" id="refresh-log">Refresh</button>
+        <button type="button" id="reboot" class="danger">Reboot device</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
