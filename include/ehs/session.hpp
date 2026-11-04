@@ -22,7 +22,7 @@ namespace ehs {
 struct SessionOptions {
     Limits limits{};
     std::size_t max_requests_per_connection{1000};  ///< Close after this many responses.
-    std::size_t output_high_water{64U * 1024U};     ///< Stop producing/reading above this.
+    std::size_t output_high_water{std::size_t{64} * 1024U};     ///< Stop producing/reading above this.
     std::string server_name{"ehs"};                 ///< "Server" header value; empty to omit.
     bool send_date{true};                           ///< Emit a "Date" header.
 };

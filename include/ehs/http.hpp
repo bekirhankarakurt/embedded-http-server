@@ -114,12 +114,12 @@ struct Request {
 /// Pull-style body generator. Returns the next piece of the body, or std::nullopt at the end.
 using BodyProducer = std::function<std::optional<std::string>()>;
 
-/// Response built by handlers. Either @ref body or @ref producer carries the payload.
+/// Response built by handlers. Either `body` or `producer` carries the payload.
 struct Response {
     Status status{Status::Ok};
     Headers headers;
     std::string body;
-    /// Streaming body. Sent chunked unless @ref content_length is set.
+    /// Streaming body. Sent chunked unless `content_length` is set.
     BodyProducer producer;
     /// Declared size of a streamed body (identity encoding).
     std::optional<std::uint64_t> content_length;
@@ -127,7 +127,7 @@ struct Response {
     /// Plain response with the given content type.
     [[nodiscard]] static Response text(Status status, std::string body,
                                        std::string_view content_type = "text/plain; charset=utf-8");
-    /// JSON error document: {"error":"<reason>","status":<code>} plus optional detail.
+    /// JSON error document with the reason phrase, the numeric status and an optional detail.
     [[nodiscard]] static Response error(Status status, std::string_view detail = {});
     /// Streaming response. Uses chunked transfer encoding.
     [[nodiscard]] static Response stream(BodyProducer producer, std::string_view content_type);

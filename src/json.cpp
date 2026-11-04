@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstdint>
 #include <system_error>
+#include <tuple>
+#include <utility>
 
 namespace ehs {
 
@@ -371,11 +373,11 @@ void append_json_string(std::string& out, std::string_view text) {
 }
 
 const Json* Json::find(std::string_view key) const noexcept {
-    const auto* object = std::get_if<Object>(&value_);
-    if (object == nullptr) {
+    const auto* members = std::get_if<Object>(&value_);
+    if (members == nullptr) {
         return nullptr;
     }
-    for (const auto& [name, value] : *object) {
+    for (const auto& [name, value] : *members) {
         if (name == key) {
             return &value;
         }
@@ -387,28 +389,28 @@ Json& Json::operator[](std::string_view key) {
     if (is_null()) {
         value_ = Object{};
     }
-    auto* object = std::get_if<Object>(&value_);
-    if (object == nullptr) {
+    auto* members = std::get_if<Object>(&value_);
+    if (members == nullptr) {
         throw JsonTypeError("JSON value is not an object");
     }
-    for (auto& [name, value] : *object) {
+    for (auto& [name, value] : *members) {
         if (name == key) {
             return value;
         }
     }
-    object->emplace_back(std::string(key), Json{});
-    return object->back().second;
+    members->emplace_back(std::piecewise_construct, std::forward_as_tuple(key), std::forward_as_tuple());
+    return members->back().second;
 }
 
 void Json::push_back(Json value) {
     if (is_null()) {
         value_ = Array{};
     }
-    auto* array = std::get_if<Array>(&value_);
-    if (array == nullptr) {
+    auto* items = std::get_if<Array>(&value_);
+    if (items == nullptr) {
         throw JsonTypeError("JSON value is not an array");
     }
-    array->push_back(std::move(value));
+    items->push_back(std::move(value));
 }
 
 void Json::dump_to(std::string& out) const {

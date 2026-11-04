@@ -26,7 +26,7 @@ struct Limits {
 /// obsolete line folding) and accepts bare LF line endings for robustness.
 class RequestParser {
 public:
-    explicit RequestParser(Limits limits = {}) noexcept : limits_(limits) {}
+    explicit RequestParser(const Limits& limits = {}) noexcept : limits_(limits) {}
 
     /// Consumes bytes from @p data and returns how many were used. Consumption stops at the
     /// end of a complete request (pipelined bytes are left to the caller) or on error.

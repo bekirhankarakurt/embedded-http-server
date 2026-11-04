@@ -106,14 +106,15 @@ template <typename T>
     const std::vector<std::string_view> args(argv + 1, argv + argc);
     for (std::size_t i = 0; i < args.size(); ++i) {
         const auto arg = args[i];
-        const auto value = [&]() -> std::optional<std::string_view> {
+        std::string_view v;
+        const auto take = [&]() -> bool {
             if (i + 1 >= args.size()) {
                 std::cerr << "ehs-panel: missing value for " << arg << '\n';
-                return std::nullopt;
+                return false;
             }
-            return args[++i];
+            v = args[++i];
+            return true;
         };
-        std::optional<std::string_view> v;
         if (arg == "-h" || arg == "--help") {
             std::cout << kUsage;
             return 0;
@@ -129,58 +130,58 @@ template <typename T>
         } else if (arg == "--no-web") {
             options.no_web = true;
         } else if (arg == "-p" || arg == "--port") {
-            if (!(v = value()) || !parse_number(*v, options.port)) {
+            if (!take() || !parse_number(v, options.port)) {
                 std::cerr << "ehs-panel: invalid port\n";
                 return 2;
             }
         } else if (arg == "-b" || arg == "--bind") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.bind = std::string(*v);
+            options.bind = std::string(v);
         } else if (arg == "-w" || arg == "--web-root") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.web_root = std::string(*v);
+            options.web_root = std::string(v);
         } else if (arg == "-c" || arg == "--config") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.config_file = std::string(*v);
+            options.config_file = std::string(v);
         } else if (arg == "-a" || arg == "--auth") {
-            if (!(v = value()) || v->find(':') == std::string_view::npos) {
+            if (!take() || v.find(':') == std::string_view::npos) {
                 std::cerr << "ehs-panel: --auth expects USER:PASS\n";
                 return 2;
             }
-            options.credentials = std::string(*v);
+            options.credentials = std::string(v);
         } else if (arg == "--proc-root") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.proc_root = std::string(*v);
+            options.proc_root = std::string(v);
         } else if (arg == "--sys-root") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.sys_root = std::string(*v);
+            options.sys_root = std::string(v);
         } else if (arg == "--replay") {
-            if (!(v = value())) {
+            if (!take()) {
                 return 2;
             }
-            options.replay_file = std::string(*v);
+            options.replay_file = std::string(v);
         } else if (arg == "--max-connections") {
-            if (!(v = value()) || !parse_number(*v, options.max_connections) || options.max_connections == 0) {
+            if (!take() || !parse_number(v, options.max_connections) || options.max_connections == 0) {
                 std::cerr << "ehs-panel: invalid --max-connections\n";
                 return 2;
             }
         } else if (arg == "--idle-timeout") {
-            if (!(v = value()) || !parse_number(*v, options.idle_timeout_ms) || options.idle_timeout_ms <= 0) {
+            if (!take() || !parse_number(v, options.idle_timeout_ms) || options.idle_timeout_ms <= 0) {
                 std::cerr << "ehs-panel: invalid --idle-timeout\n";
                 return 2;
             }
         } else if (arg == "--request-timeout") {
-            if (!(v = value()) || !parse_number(*v, options.request_timeout_ms) ||
+            if (!take() || !parse_number(v, options.request_timeout_ms) ||
                 options.request_timeout_ms <= 0) {
                 std::cerr << "ehs-panel: invalid --request-timeout\n";
                 return 2;
@@ -271,9 +272,9 @@ int run(const Options& options) {
         auto response = router.handle(request);
         if (!quiet) {
             const std::chrono::duration<double, std::milli> elapsed = std::chrono::steady_clock::now() - start;
-            std::fprintf(stderr, "%s %s %s %d %.3fms\n", utc_now().c_str(),
+            static_cast<void>(std::fprintf(stderr, "%s %s %s %d %.3fms\n", utc_now().c_str(),
                          std::string(ehs::to_string(request.method)).c_str(), request.target.c_str(),
-                         ehs::code(response.status), elapsed.count());
+                         ehs::code(response.status), elapsed.count()));
         }
         return response;
     };
@@ -293,17 +294,17 @@ int run(const Options& options) {
     struct sigaction action{};
     action.sa_handler = on_signal;
     sigemptyset(&action.sa_mask);
-    sigaction(SIGINT, &action, nullptr);
-    sigaction(SIGTERM, &action, nullptr);
-    std::signal(SIGPIPE, SIG_IGN);
+    static_cast<void>(sigaction(SIGINT, &action, nullptr));
+    static_cast<void>(sigaction(SIGTERM, &action, nullptr));
+    static_cast<void>(std::signal(SIGPIPE, SIG_IGN));
 
-    std::fprintf(stderr, "ehs-panel %s listening on http://%s:%u (device: %s%s)\n",
+    static_cast<void>(std::fprintf(stderr, "ehs-panel %s listening on http://%s:%u (device: %s%s)\n",
                  std::string(ehs::kVersion).c_str(), options.bind.c_str(), static_cast<unsigned>(server.port()),
-                 std::string(device->kind()).c_str(), auth ? ", basic auth" : "");
+                 std::string(device->kind()).c_str(), auth ? ", basic auth" : ""));
     server.run();
     g_server.store(nullptr);
-    std::fprintf(stderr, "ehs-panel stopped after %llu requests\n",
-                 static_cast<unsigned long long>(server.stats().requests_handled.load()));
+    static_cast<void>(std::fprintf(stderr, "ehs-panel stopped after %llu requests\n",
+                 static_cast<unsigned long long>(server.stats().requests_handled.load())));
     return 0;
 }
 

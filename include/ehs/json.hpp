@@ -33,14 +33,21 @@ public:
     static constexpr std::size_t kMaxDepth = 64;
 
     Json() noexcept = default;
+    // cppcheck-suppress noExplicitConstructor
     Json(std::nullptr_t) noexcept {}  // NOLINT(google-explicit-constructor)
+    // cppcheck-suppress noExplicitConstructor
     Json(bool value) noexcept : value_(value) {}  // NOLINT(google-explicit-constructor)
     template <typename T,
               std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>, int> = 0>
+    // cppcheck-suppress noExplicitConstructor
     Json(T value) noexcept : value_(static_cast<double>(value)) {}  // NOLINT(google-explicit-constructor)
+    // cppcheck-suppress noExplicitConstructor
     Json(const char* value) : value_(std::string(value)) {}  // NOLINT(google-explicit-constructor)
+    // cppcheck-suppress noExplicitConstructor
     Json(std::string value) noexcept : value_(std::move(value)) {}  // NOLINT(google-explicit-constructor)
+    // cppcheck-suppress noExplicitConstructor
     Json(Array value) noexcept : value_(std::move(value)) {}  // NOLINT(google-explicit-constructor)
+    // cppcheck-suppress noExplicitConstructor
     Json(Object value) noexcept : value_(std::move(value)) {}  // NOLINT(google-explicit-constructor)
 
     [[nodiscard]] static Json array() { return Json(Array{}); }

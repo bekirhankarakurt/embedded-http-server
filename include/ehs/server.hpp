@@ -85,7 +85,7 @@ private:
 
     void accept_connections();
     void handle_event(std::uint64_t id, std::uint32_t events);
-    void flush(Connection& connection);
+    static void flush(Connection& connection);
     void update_interest(Connection& connection);
     void close_connection(std::uint64_t id);
     void set_listening(bool enabled);
@@ -103,7 +103,7 @@ private:
     std::uint64_t next_id_{2};
     bool listen_paused_{false};
     bool draining_{false};
-    Clock::time_point drain_deadline_{};
+    Clock::time_point drain_deadline_;
     ServerStats stats_;
 };
 

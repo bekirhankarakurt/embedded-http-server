@@ -16,7 +16,7 @@ struct Parsed {
     std::size_t used{0};
 };
 
-Parsed parse(std::string_view text, ehs::Limits limits = {}) {
+Parsed parse(std::string_view text, const ehs::Limits& limits = {}) {
     Parsed p{RequestParser(limits), 0};
     p.used = p.parser.feed(text);
     return p;
