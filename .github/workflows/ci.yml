@@ -31,7 +31,7 @@ jobs:
             cxx: g++
             build_type: Debug
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: >
           cmake -S . -B build
@@ -55,7 +55,7 @@ jobs:
     name: ASan + UBSan
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: >
           cmake -S . -B build
@@ -74,7 +74,7 @@ jobs:
     name: clang-tidy + cppcheck
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y cppcheck clang-tidy
       - name: Configure
@@ -99,7 +99,7 @@ jobs:
     name: Coverage
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install gcovr
         run: pipx install gcovr
       - name: Build and test with coverage
