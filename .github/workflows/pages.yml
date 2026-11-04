@@ -1,0 +1,64 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: API docs + coverage report
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y doxygen graphviz
+          pipx install gcovr
+      - name: API documentation
+        run: doxygen Doxyfile
+      - name: Coverage
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DEHS_COVERAGE=ON -DEHS_BUILD_EXAMPLES=ON
+          cmake --build build -j
+          ctest --test-dir build --output-on-failure
+          mkdir -p site/coverage
+          gcovr -r . build \
+            --filter src/ --filter include/ --filter examples/device_panel/ \
+            --exclude examples/device_panel/main.cpp \
+            --html-details site/coverage/index.html \
+            --json-summary coverage-summary.json --print-summary
+      - name: Coverage badge endpoint
+        run: |
+          python3 - <<'PY'
+          import json
+          pct = json.load(open("coverage-summary.json"))["line_percent"]
+          color = "brightgreen" if pct >= 90 else "green" if pct >= 80 else "yellow" if pct >= 70 else "red"
+          json.dump({"schemaVersion": 1, "label": "coverage", "message": f"{pct:.0f}%", "color": color},
+                    open("site/coverage.json", "w"))
+          PY
+      - name: Assemble site
+        run: cp -r build-docs/html/. site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
