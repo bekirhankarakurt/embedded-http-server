@@ -48,7 +48,7 @@ jobs:
           PY
       - name: Assemble site
         run: cp -r build-docs/html/. site/
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
