@@ -49,7 +49,7 @@ jobs:
           cmake --install build --prefix "dist/${name}" --strip
           cp README.md LICENSE CHANGELOG.md "dist/${name}/"
           tar -C dist -czf "${name}.tar.gz" "${name}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package-${{ matrix.arch }}
           path: "*.tar.gz"
